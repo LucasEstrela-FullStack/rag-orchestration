@@ -28,8 +28,19 @@ ollama pull qwen2.5:3b
 
 ```bash
 uv sync
+cp .env.example .env
 ```
+
+## Como rodar
+
+Suba o Qdrant:
+
+```bash
+docker compose up -d
+```
+
+Dashboard do Qdrant: http://localhost:6333/dashboard
 
 ## Status
 
-Em construção, passo a passo. Veja [context/progress-tracker.md](context/progress-tracker.md).
+Em construção, passo a passo.
