@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# API do Inngest, de onde a UI lê o resultado das runs. Padrão: dev server local.
+INNGEST_BASE_URL = os.getenv("INNGEST_BASE_URL", "http://127.0.0.1:8288")
+
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 QDRANT_COLLECTION = os.getenv("QDRANT_COLLECTION", "docs")
 
