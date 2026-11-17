@@ -55,6 +55,16 @@ npx inngest-cli@latest dev -u http://127.0.0.1:8000/api/inngest --no-discovery
 
 O painel do Inngest fica em http://127.0.0.1:8288 e mostra cada execução, etapa por etapa.
 
+## Robustez
+
+As duas funções do Inngest ficam em [app/functions.py](app/functions.py). Cada chamada ao Ollama ou ao Qdrant roda em uma etapa (`step.run`). Se uma etapa falhar, só ela é repetida, até 3 vezes, e as etapas já concluídas não rodam de novo.
+
+A ingestão (`rag/ingest_pdf`) processa um PDF por vez e começa no máximo 2 por minuto. Os PDFs que passam desse ritmo esperam na fila. Se o mesmo arquivo for reenviado em menos de 5 minutos, o evento é ignorado.
+
+A pergunta (`rag/query_pdf`) atende até 2 ao mesmo tempo e é cancelada se passar de 10 minutos.
+
+Para ver o retry funcionando, pare o Qdrant (`docker compose stop qdrant`), faça uma pergunta e religue o Qdrant (`docker compose start qdrant`). A execução fica pendente no painel e termina sozinha quando o banco volta.
+
 ## Testes
 
 Com o Qdrant rodando:

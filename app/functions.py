@@ -1,5 +1,6 @@
 """Funções Inngest. Cada chamada externa roda em um step para ter retry e aparecer no painel."""
 
+from datetime import timedelta
 from pathlib import Path
 
 import inngest
@@ -20,6 +21,13 @@ def _embed_and_upsert(chunks: list[dict]) -> int:
 @inngest_client.create_function(
     fn_id="ingest-pdf",
     trigger=inngest.TriggerEvent(event="rag/ingest_pdf"),
+    retries=3,
+    # Ollama em CPU aguenta uma ingestão por vez; as outras esperam na fila.
+    concurrency=[inngest.Concurrency(limit=1)],
+    # No máximo 2 ingestões começam por minuto; o excedente é adiado, não descartado.
+    throttle=inngest.Throttle(limit=2, period=timedelta(minutes=1)),
+    # O mesmo arquivo reenviado em menos de 5 minutos é ignorado (cliques repetidos no upload).
+    rate_limit=inngest.RateLimit(limit=1, period=timedelta(minutes=5), key="event.data.pdf_path"),
 )
 def ingest_pdf(ctx: inngest.ContextSync) -> dict:
     pdf_path = ctx.event.data.get("pdf_path")
@@ -43,6 +51,10 @@ def _answer(question: str, chunks: list[dict]) -> str:
 @inngest_client.create_function(
     fn_id="query-pdf",
     trigger=inngest.TriggerEvent(event="rag/query_pdf"),
+    retries=3,
+    concurrency=[inngest.Concurrency(limit=2)],
+    # Uma resposta que passa disso indica Ollama travado; a run é cancelada em vez de ficar presa.
+    timeouts=inngest.Timeouts(finish=timedelta(minutes=10)),
 )
 def query_pdf(ctx: inngest.ContextSync) -> dict:
     question = ctx.event.data.get("question")
