@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "Pipeline RAG pronto para produção com Inngest, Qdrant, LlamaIndex, Ollama e Streamlit"
 requires-python = ">=3.12"
 dependencies = [
+    "llama-index-core>=0.14.26",
+    "llama-index-readers-file>=0.8.0",
     "ollama>=0.6.3",
     "python-dotenv>=1.2.4",
     "qdrant-client>=1.20.0",
@@ -16,3 +18,7 @@ dev = [
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+
+[tool.uv]
+# LlamaIndex recusa abrir arquivos instalados como hardlink (padrão do uv).
+link-mode = "copy"
