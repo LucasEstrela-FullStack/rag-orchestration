@@ -5,7 +5,7 @@ from pathlib import Path
 
 import inngest
 
-from app import llm, vector_store
+from app import config, llm, vector_store
 from app.ingest import load_and_chunk
 from app.inngest_client import inngest_client
 from app.prompt import build_messages
@@ -65,9 +65,14 @@ def query_pdf(ctx: inngest.ContextSync) -> dict:
         raise inngest.NonRetriableError(f"top_k deve ser inteiro entre 1 e 20, veio {top_k!r}.")
 
     vector = ctx.step.run("embed-query", _embed_query, question)
-    chunks = ctx.step.run("search", vector_store.search, vector, top_k)
+    chunks = ctx.step.run("search", vector_store.search, vector, top_k, config.MIN_SCORE)
     if not chunks:
-        return {"answer": "Nenhum documento indexado ainda. Envie um PDF primeiro.", "sources": []}
+        # Coleção vazia ou nada parecido com a pergunta: sem contexto, o LLM não é chamado.
+        return {
+            "answer": "Não encontrei nada sobre isso nos documentos indexados. "
+            "Reformule a pergunta ou envie um PDF sobre o assunto.",
+            "sources": [],
+        }
 
     answer = ctx.step.run("answer", _answer, question, chunks)
     sources = sorted({f"{c['source']} (p. {c['page']})" for c in chunks})

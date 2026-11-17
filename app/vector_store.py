@@ -38,8 +38,15 @@ def upsert(
     _client.upsert(collection_name=name, points=points)
 
 
-def search(vector: list[float], top_k: int = 5, name: str = config.QDRANT_COLLECTION) -> list[dict]:
-    """Devolve os `top_k` chunks mais similares: payload + score."""
+def search(
+    vector: list[float],
+    top_k: int = 5,
+    min_score: float | None = None,
+    name: str = config.QDRANT_COLLECTION,
+) -> list[dict]:
+    """Devolve até `top_k` chunks mais similares, com score acima de `min_score`: payload + score."""
     ensure_collection(name)
-    result = _client.query_points(collection_name=name, query=vector, limit=top_k, with_payload=True)
+    result = _client.query_points(
+        collection_name=name, query=vector, limit=top_k, score_threshold=min_score or None, with_payload=True
+    )
     return [{**(point.payload or {}), "score": point.score} for point in result.points]

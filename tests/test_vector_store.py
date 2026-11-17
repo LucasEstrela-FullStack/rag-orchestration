@@ -38,6 +38,17 @@ def test_search_returns_most_similar_first(collection):
     assert hits[0]["score"] == pytest.approx(1.0)
 
 
+def test_search_drops_hits_below_min_score(collection):
+    ids = [vector_store.point_id("a.pdf", i) for i in range(2)]
+    payloads = [{"source": "a.pdf", "text": f"chunk {i}"} for i in range(2)]
+    vector_store.upsert(ids, [one_hot(0), one_hot(1)], payloads, name=collection)
+
+    # Vetores ortogonais têm similaridade 0; só o idêntico passa do limiar.
+    hits = vector_store.search(one_hot(0), top_k=2, min_score=0.5, name=collection)
+
+    assert [hit["text"] for hit in hits] == ["chunk 0"]
+
+
 def test_upsert_same_ids_does_not_duplicate(collection):
     ids = [vector_store.point_id("a.pdf", i) for i in range(2)]
     vectors = [one_hot(i) for i in range(2)]
