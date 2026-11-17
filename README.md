@@ -41,6 +41,28 @@ docker compose up -d
 
 Dashboard do Qdrant: http://localhost:6333/dashboard
 
+Em outro terminal, suba a API que serve as funções do Inngest:
+
+```bash
+uv run uvicorn app.main:app --port 8000
+```
+
+Em um terceiro terminal, suba o dev server do Inngest (precisa de Node.js):
+
+```bash
+npx inngest-cli@latest dev -u http://127.0.0.1:8000/api/inngest --no-discovery
+```
+
+O painel do Inngest fica em http://127.0.0.1:8288 e mostra cada execução, etapa por etapa.
+
+## Testes
+
+Com o Qdrant rodando:
+
+```bash
+uv run pytest
+```
+
 ## Status
 
 Em construção, passo a passo.
